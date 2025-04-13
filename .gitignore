@@ -1,0 +1,39 @@
+# Ignore build results
+bin/
+obj/
+
+# User-specific files
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Backup files
+*.bak
+
+# Build logs
+*.log
+
+# Visual Studio temporary files
+*.TMP
+~$*
+
+# NuGet packages
+*.nupkg
+packages/
+
+# Rider and other IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Generated files
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# Other settings
+*.vs/
