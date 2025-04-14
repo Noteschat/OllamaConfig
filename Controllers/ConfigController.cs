@@ -87,6 +87,8 @@ namespace OllamaConfig.Controllers
                             return StatusCode(403, new { cause = "not logged in" });
                         case ConfigError.MissingProperty:
                             return StatusCode(400, new { cause = "missing property" });
+                        case ConfigError.ModelNotFoud:
+                            return StatusCode(400, new { cause = "unknown model" });
                         case ConfigError.IdentityCreationError:
                             return StatusCode(400, new { cause = "couldn't create user" });
                         default:

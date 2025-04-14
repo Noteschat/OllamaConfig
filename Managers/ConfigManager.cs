@@ -55,6 +55,12 @@ namespace OllamaConfig.Managers
 
             try
             {
+                if (!(await CheckForModel(body.Model)))
+                {
+                    Logger.Warn("Unable to pull Model");
+                    return new Either<Config, ConfigError>(ConfigError.ModelNotFoud);
+                }
+
                 var password = Guid.NewGuid().ToString();
                 var configUser = new
                 {
@@ -80,6 +86,7 @@ namespace OllamaConfig.Managers
                     Message = body.Message,
                     Password = password
                 };
+
                 await _configs.InsertOneAsync(dbconfig);
 
                 var config = new Config
@@ -261,6 +268,23 @@ namespace OllamaConfig.Managers
                 await Task.Delay(2000);
             }
         }
+    
+        async Task<bool> CheckForModel(string modelName)
+        {
+            HttpClient client = new HttpClient();
+            var ollamaListResponse = await client.PostAsync("http://localhost/api/ai/show", new StringContent(JsonSerializer.Serialize(new { model = modelName }), Encoding.UTF8, "application/json"));
+            if (!new List<int> { 200, 404 }.Contains((int)ollamaListResponse.StatusCode))
+            {
+                Logger.Error("No Connection to Ollama on Find Model");
+                return false;
+            }
+            var pullRequest = new HttpRequestMessage(HttpMethod.Post, "http://localhost/api/ai/pull")
+            {
+                Content = new StringContent(JsonSerializer.Serialize(new { model = modelName }), Encoding.UTF8, "application/json")
+            };
+            var ollamaPullResponse = await client.SendAsync(pullRequest, HttpCompletionOption.ResponseHeadersRead);
+            return ollamaPullResponse.IsSuccessStatusCode;
+        }
     }
 
     public struct DBConfig
@@ -338,6 +362,7 @@ namespace OllamaConfig.Managers
         Unauthorized,
         MissingProperty,
         IdentityCreationError,
-        IdentityDeletionError
+        IdentityDeletionError,
+        ModelNotFoud
     }
 }
