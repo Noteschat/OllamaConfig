@@ -55,7 +55,7 @@ namespace OllamaConfig.Managers
 
             try
             {
-                if (!(await CheckForModel(body.Model)))
+                if (!await CheckForModel(body.Model))
                 {
                     Logger.Warn("Unable to pull Model");
                     return new Either<Config, ConfigError>(ConfigError.ModelNotFoud);
@@ -84,7 +84,8 @@ namespace OllamaConfig.Managers
                     Model = body.Model,
                     Name = body.Name,
                     Message = body.Message,
-                    Password = password
+                    Password = password,
+                    UseNotes = body.UseNotes
                 };
 
                 await _configs.InsertOneAsync(dbconfig);
@@ -97,6 +98,7 @@ namespace OllamaConfig.Managers
                     Name = body.Name,
                     Message = body.Message,
                     Password = password,
+                    UseNotes = body.UseNotes
                 };
 
                 return new Either<Config, ConfigError>(config);
@@ -133,6 +135,7 @@ namespace OllamaConfig.Managers
                     Password = list[0].Password,
                     Model = list[0].Model,
                     Message = list[0].Message,
+                    UseNotes = list[0].UseNotes ?? false
                 };
                 return new Either<Config, ConfigError>(config);
             }
@@ -177,6 +180,11 @@ namespace OllamaConfig.Managers
                     update = Builders<DBConfig>.Update.Set("Message", body.Message);
                     await _configs.UpdateOneAsync(config => config.Id == id && config.Owner == user.Id, update);
                 }
+                if(body.UseNotes != config.UseNotes)
+                {
+                    update = Builders<DBConfig>.Update.Set("UseNotes", body.UseNotes);
+                    await _configs.UpdateOneAsync(config => config.Id == id && config.Owner == user.Id, update);
+                }
 
                 return new Either<Config, ConfigError>(new Config
                 {
@@ -185,7 +193,8 @@ namespace OllamaConfig.Managers
                     Name = config.Name,
                     Password = config.Password,
                     Model = body.Model,
-                    Message = body.Message
+                    Message = body.Message,
+                    UseNotes = config.UseNotes ?? false
                 });
             }
             else
@@ -248,6 +257,7 @@ namespace OllamaConfig.Managers
                     Model = config.Model,
                     Name = config.Name,
                     Password = config.Password,
+                    UseNotes = config.UseNotes ?? false
                 };
             });
 
@@ -303,6 +313,8 @@ namespace OllamaConfig.Managers
         public string Model { get; set; }
         [JsonPropertyName("message")]
         public string Message { get; set; }
+        [JsonPropertyName("useNotes")]
+        public bool? UseNotes { get; set; }
     }
 
     public struct Config
@@ -319,6 +331,8 @@ namespace OllamaConfig.Managers
         public string Model { get; set; }
         [JsonPropertyName("message")]
         public string Message { get; set; }
+        [JsonPropertyName("useNotes")]
+        public bool UseNotes { get; set; }
     }
 
     public struct ConfigAll
@@ -337,6 +351,8 @@ namespace OllamaConfig.Managers
         public string Model { get; set; }
         [JsonPropertyName("message")]
         public string Message { get; set; }
+        [JsonPropertyName("useNotes")]
+        public bool UseNotes { get; set; }
     }
 
     public struct ChangeConfigBody
@@ -345,6 +361,8 @@ namespace OllamaConfig.Managers
         public string Model { get; set; }
         [JsonPropertyName("message")]
         public string Message { get; set; }
+        [JsonPropertyName("useNotes")]
+        public bool UseNotes { get; set; }
     }
 
     public struct IdentityUserCreationResponse
