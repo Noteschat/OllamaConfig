@@ -19,7 +19,7 @@ namespace OllamaConfig.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if(context.Request.Path.Value.EndsWith("/api/register"))
+            if (context.Request.Path.Value.EndsWith("/api/register"))
             {
                 await _next(context);
                 return;
@@ -91,6 +91,7 @@ namespace OllamaConfig.Middlewares
 
                 context.Items["registration"] = true;
             }
+            context.Items["sessionId"] = sessionId;
 
             // Forward the request to the next middleware
             await _next(context);
