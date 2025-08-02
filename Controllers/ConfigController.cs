@@ -28,7 +28,8 @@ namespace OllamaConfig.Controllers
 
             var result = await _configs.GetAll(user);
             return result.Match<ActionResult>(
-                configs => {
+                configs =>
+                {
                     var res = configs.Select(config => new ConfigAll
                     {
                         ConfigId = config.ConfigId,
@@ -59,6 +60,11 @@ namespace OllamaConfig.Controllers
             {
                 return StatusCode(500, new { cause = "invalid user" });
             }
+            if (!HttpContext.Items.TryGetValue("sessionId", out var sessionIdObj) ||
+            sessionIdObj is not string sessionId)
+            {
+                return StatusCode(500, new { cause = "invalid sessionId" });
+            }
 
             string requestBody = await new StreamReader(Request.Body).ReadToEndAsync();
             NewConfigBody data;
@@ -72,10 +78,11 @@ namespace OllamaConfig.Controllers
                 data = new NewConfigBody();
             }
 
-            var result = await _configs.CreateNew(user, data);
+            var result = await _configs.CreateNew(user, data, sessionId);
 
             return result.Match<ActionResult>(
-                config => {
+                config =>
+                {
                     Task.Run(() => _registrations.SendNewConfig(config));
                     return StatusCode(200, new { id = config.ConfigId });
                 },

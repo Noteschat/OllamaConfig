@@ -1,6 +1,48 @@
-@OllamaConfig_HostAddress = http://localhost:5284
-
-GET {{OllamaConfig_HostAddress}}/weatherforecast/
-Accept: application/json
+@OllamaConfig_HostAddress = http://localhost
 
 ###
+GET {{OllamaConfig_HostAddress}}/api/ollamaconfig/config
+Cookie: sessionId=79483aec-ccb4-4e12-b26e-4e5c09d0c0b7
+
+###
+POST {{OllamaConfig_HostAddress}}/api/ollamaconfig/config
+Cookie: sessionId=79483aec-ccb4-4e12-b26e-4e5c09d0c0b7
+Content-Type: application/json
+
+{
+    "name": "Test",
+    "model": "deepseek-r1:14b",
+    "message": "You are a test agent.",
+    "useNotes": true
+}
+
+###
+GET {{OllamaConfig_HostAddress}}/api/ollamaconfig/config/d9c73498-2fab-4cab-8c3b-ef5fd7cec537
+Cookie: sessionId=79483aec-ccb4-4e12-b26e-4e5c09d0c0b7
+
+###
+GET {{OllamaConfig_HostAddress}}/api/ollamaconfig/config/d9c73498-2fab-4cab-8c3b-ef5fd7cec537
+Cookie: sessionId=79483aec-ccb4-4e12-b26e-4e5c09d0c0b7
+Content-Type: application/json
+
+{
+    "model": "deepseek-r1:14b",
+    "message": "You are a test agent.",
+    "useNotes": true
+}
+
+###
+DELETE {{OllamaConfig_HostAddress}}/api/ollamaconfig/config/d9c73498-2fab-4cab-8c3b-ef5fd7cec537
+Cookie: sessionId=79483aec-ccb4-4e12-b26e-4e5c09d0c0b7
+
+
+###
+POST {{OllamaConfig_HostAddress}}/api/ollamaconfig/register
+Content-Type: application/json
+
+{
+    "callback": {
+        "uri": "http://localhost/api/ollamaconnector/callback",
+        "id": "eea5b8ee-cb7e-4d6c-9e0f-e46a47c3e7b8"
+    }
+}

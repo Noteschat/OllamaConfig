@@ -46,7 +46,7 @@ namespace OllamaConfig.Managers
             }
         }
 
-        public async Task<Either<Config, ConfigError>> CreateNew(User user, NewConfigBody body)
+        public async Task<Either<Config, ConfigError>> CreateNew(User user, NewConfigBody body, string sessionId)
         {
             if (body.Message == null || body.Message.Length == 0 || body.Name == null || body.Name.Length == 0 || body.Model == null || body.Model.Length == 0)
             {
@@ -68,7 +68,7 @@ namespace OllamaConfig.Managers
                     password,
                 };
                 HttpClient client = new HttpClient();
-                var identityResponse = await client.PostAsync("http://localhost/api/identity/user", new StringContent(JsonSerializer.Serialize(configUser),Encoding.UTF8, "application/json"));
+                var identityResponse = await client.PostAsync("http://localhost/api/identity/user", new StringContent(JsonSerializer.Serialize(configUser), Encoding.UTF8, "application/json"));
                 if (!identityResponse.IsSuccessStatusCode)
                 {
                     return new Either<Config, ConfigError>(ConfigError.IdentityCreationError);
@@ -89,6 +89,16 @@ namespace OllamaConfig.Managers
                 };
 
                 await _configs.InsertOneAsync(dbconfig);
+
+                var cookies = new CookieContainer();
+                cookies.Add(new Uri("http://localhost/"), new Cookie("sessionId", sessionId));
+                var handler = new HttpClientHandler
+                {
+                    CookieContainer = cookies
+                };
+
+                var _httpClient = new HttpClient(handler);
+                await _httpClient.PostAsync($"http://localhost/api/contacts/list/" + identityContent.Id, null);
 
                 var config = new Config
                 {
@@ -175,12 +185,12 @@ namespace OllamaConfig.Managers
                     update = Builders<DBConfig>.Update.Set("Model", body.Model);
                     await _configs.UpdateOneAsync(config => config.Id == id && config.Owner == user.Id, update);
                 }
-                if(body.Message != config.Message)
+                if (body.Message != config.Message)
                 {
                     update = Builders<DBConfig>.Update.Set("Message", body.Message);
                     await _configs.UpdateOneAsync(config => config.Id == id && config.Owner == user.Id, update);
                 }
-                if(body.UseNotes != config.UseNotes)
+                if (body.UseNotes != config.UseNotes)
                 {
                     update = Builders<DBConfig>.Update.Set("UseNotes", body.UseNotes);
                     await _configs.UpdateOneAsync(config => config.Id == id && config.Owner == user.Id, update);
@@ -220,16 +230,16 @@ namespace OllamaConfig.Managers
                 {
                     CookieContainer = new CookieContainer()
                 });
-                
+
                 var loginResult = await client.PostAsync("http://localhost/api/identity/login", new StringContent(JsonSerializer.Serialize(new { name = result.Name, password = result.Password }), Encoding.UTF8, "application/json"));
-                if(!loginResult.IsSuccessStatusCode)
+                if (!loginResult.IsSuccessStatusCode)
                 {
                     Logger.Error("StatusCode on Login: " + loginResult.StatusCode);
                     return ConfigError.IdentityDeletionError;
                 }
 
                 var identityDeletionResult = await client.DeleteAsync("http://localhost/api/identity/user/current");
-                if(!identityDeletionResult.IsSuccessStatusCode)
+                if (!identityDeletionResult.IsSuccessStatusCode)
                 {
                     Logger.Error("StatusCode on Deletion: " + identityDeletionResult.StatusCode);
                     return ConfigError.IdentityDeletionError;
@@ -278,7 +288,7 @@ namespace OllamaConfig.Managers
                 await Task.Delay(2000);
             }
         }
-    
+
         async Task<bool> CheckForModel(string modelName)
         {
             HttpClient client = new HttpClient();
